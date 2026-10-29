@@ -13,7 +13,7 @@ from pdeSolver import solve, find_eps_c,delete_last_line
 import shutil
 
 def loadbar(i, total, prefix="", suffix="", decimals=1, fill='>'):
-    pct = f'{100 * i / total:.{decimals}f}%'
+    pct = f'{500 * i / total:.{decimals}f}%'
     length = max(1, shutil.get_terminal_size().columns - len(f'{prefix} || {pct} {suffix}') - 1)
     n = length * i*5 // total
     print(f'\r{prefix} |{fill * n}{"-" * (length - n)}| {pct} {suffix}', end='\r' if i < total else '\n')

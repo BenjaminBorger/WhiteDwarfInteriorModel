@@ -6,7 +6,7 @@ import numpy as np
 
 import numpy as np
 
-def make_objs(numTests=7000, start=1/500, end=2, radius_km=7000):
+def make_objs(numTests=1000, start=1/500, end=2, radius_km=7000):
     masses = start + end - np.geomspace(start, end, numTests)  # solar masses
     masses = np.sort(masses)
     return np.column_stack([np.full(numTests, radius_km), masses])  # shape (numTests, 2)

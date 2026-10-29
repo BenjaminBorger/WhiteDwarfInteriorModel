@@ -21,7 +21,10 @@ gammaRel = 4/3
 gammaNonRel = 5/3
 K_nonrel = hbar**2/(15*np.pi**2*m_e) * (3*np.pi**2/(mu_e*m_n*c**2))**(5/3)
 K_rel    = hbar*c/(12*np.pi**2)      * (3*np.pi**2/(mu_e*m_n*c**2))**(4/3)
-triggerPressure = ((m_e**4)*(c**5))/(12*(np.pi**2)*(hbar**3))
+#triggerPressure = ((m_e**4)*(c**5))/(12*(np.pi**2)*(hbar**3))
+
+eps_switch = np.e**((np.log(K_rel)-np.log(K_nonrel))/(gammaNonRel-gammaRel))
+triggerPressure = K_rel*eps_switch**gammaRel
 
 '''so electrons become relatavistic approx when kf = me c
 which is when pressure = ((m_e**4)*(c**5))/(12*(pi**2)*(hbar**3))
@@ -52,6 +55,7 @@ def solve(eps_c,allpoints = False): # eps_c is given through findepsc
         return y[1]-triggerPressure
     switch.terminal = True
     switch.direction = -1
+
 
     r0=1 # initial radius of 1 meter to stop a div by zero error
     m0 = 4*np.pi/3*r0**3*eps_c/c**2 # initial mass which will basiclaly equal zero
