@@ -6,7 +6,7 @@ from scipy.constants import G, c, hbar, m_e, m_n
 from astropy.constants import M_sun
 import sys
 from starDatabase import obj
-
+from numba import njit
 
 
 def delete_last_line(): # got from stackoverflow https://stackoverflow.com/questions/44565704/how-to-clear-only-last-one-line-in-python-output-console
@@ -26,13 +26,8 @@ triggerPressure = ((m_e**4)*(c**5))/(12*(np.pi**2)*(hbar**3))
 '''so electrons become relatavistic approx when kf = me c
 which is when pressure = ((m_e**4)*(c**5))/(12*(pi**2)*(hbar**3))
 This will be called the trigger pressure '''
-
-def solve(eps_c,allpoints = False): # eps_c is given through findepsc
-    #delete_last_line()
-    #if not allpoints: print(f"Central value of Epsilon Guess = {eps_c}")
-    #else: print(f"Central value of Epsilon Final = {eps_c}")
-
-    def f(r,y,K,gamma):
+@njit #speeds it up
+def f(r,y,K,gamma):
         M,P = y
         eps = (max(P, 0)/K)**(1/gamma) #inversion of polytope
         dm = 4*np.pi*r**2*eps/c**2  #first equation
@@ -40,7 +35,11 @@ def solve(eps_c,allpoints = False): # eps_c is given through findepsc
              / (1 - 2*G*M/(r*c**2)) # relatavistic pressure curve
         return [dm,dP]
 
-
+def solve(eps_c,allpoints = False): # eps_c is given through findepsc
+    #delete_last_line()
+    #if not allpoints: print(f"Central value of Epsilon Guess = {eps_c}")
+    #else: print(f"Central value of Epsilon Final = {eps_c}")
+    
     p0 = K_rel*eps_c**gammaRel #initial pressure polytrope
 
     def surface(r, y,K,gamma): # define a surface where pressure basically equals zero and stop there
@@ -100,7 +99,7 @@ def find_eps_c(iter,rel): # i took this out. rel is boolean True or false if tru
     #print("Radius: ",float(realRadius), "     Mass: ", float(realMass)) #check that all is ok thusfar
     
     epsilonGuess = (realMass/((4/3)*np.pi*realRadius**3))*(c**2) # guess assuming const density
-    epsilonSpace = np.logspace(np.log10(epsilonGuess)-5,np.log10(epsilonGuess)+5,40) # defines an area which is reasonable for eps to be in
+    epsilonSpace = np.logspace(np.log10(epsilonGuess)-5,np.log10(epsilonGuess)+5,30) # defines an area which is reasonable for eps to be in
 
     iteratedRs = np.full(len(epsilonSpace), np.nan) # creates an array of not a numbers the length of epsilon space
     iteratedMs = np.full(len(epsilonSpace), np.nan)

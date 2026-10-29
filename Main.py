@@ -15,7 +15,7 @@ import shutil
 def loadbar(i, total, prefix="", suffix="", decimals=1, fill='>'):
     pct = f'{100 * i / total:.{decimals}f}%'
     length = max(1, shutil.get_terminal_size().columns - len(f'{prefix} || {pct} {suffix}') - 1)
-    n = length * i // total
+    n = length * i*5 // total
     print(f'\r{prefix} |{fill * n}{"-" * (length - n)}| {pct} {suffix}', end='\r' if i < total else '\n')
 #plotting
 #could maybe add some sort of circle that has the pressure so as the radius goes outwards, it changes colour (bit naff)
@@ -63,10 +63,11 @@ for i in range(objectsLength):
             limit_mass = mass_profile[j]
             limit_radius = radius_grid[j]
     
-    plt.plot(mass_profile,radius_grid)
+    plt.plot(mass_profile/M_sun.value,radius_grid/1000)
     #plt.show()
 
-plt.plot(FMasses,FRadii)
+
+#plt.loglog(FMasses,FRadii)
 
 
 
@@ -74,9 +75,11 @@ plt.plot(FMasses,FRadii)
 
 print(f"Limiting Mass: {limit_mass/M_sun.value} solar masses")
 plt.title('Rel Rad Mass Relation')
-plt.legend()
-plt.xlabel('Mass (Kg)')
-plt.ylabel('Radius (m)')    
+#plt.legend()
+plt.xlabel('Mass (Solar Masses)')
+plt.ylabel('Radius (Km)') 
+plt.xlim(0,1.5)
+plt.ylim(0,15000)
 plt.show()
 
 
