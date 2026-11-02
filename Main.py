@@ -82,7 +82,7 @@ def run_stars(use_cache=True):
     return results, limit_mass
 
 results, limit_mass = run_stars()
-print(results)
+
 
 p_values = np.logspace(21,23, 60) # pascals
 
