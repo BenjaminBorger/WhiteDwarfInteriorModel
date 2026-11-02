@@ -171,7 +171,7 @@ def find_eps_c(iter,rel): # i took this out. rel is boolean True or false if tru
         goodEpsis.append(goodEpsiM) # when found, add to list
         #goodEpsiM = brentq(radiusDiffFunc,interval[0],interval[1])
 
-    if len(goodEpsis) == 0: print("No roots Found for object ",iter) # if there are no roots, print this:problem
+    if len(goodEpsis) == 0: print("\nNo roots Found for object ",iter) # if there are no roots, print this:problem
 
     bestE, bestErr = None, np.inf # makes our bestE none and our best error infinitely large
     for e in goodEpsis: # for each good espilon 

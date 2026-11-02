@@ -45,7 +45,9 @@ def run_stars(use_cache=True):
         cache = pd.read_csv(CSV_FILE, index_col="Star")
     else:
         cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star")
-
+        print(f'No cache found with these iterations. Preparing to create new cache with {objectsLength} + iterations')
+        print('Solving...')
+        print()
     rows = []
     limit_mass = -np.inf
     loadbar(0, objectsLength, suffix="complete")
@@ -60,7 +62,6 @@ def run_stars(use_cache=True):
             eps_c = find_eps_c(i, rel=False)
 
         if eps_c is None or np.isnan(eps_c):
-            print(f"\nSkipping object {i}: no valid epsilon_c")
             break
 
         r, m, radius_grid, states = solveWithSwitch(eps_c, allpoints=True)
@@ -88,7 +89,10 @@ p_values = np.logspace(21,23, 60) # pascals
 
 NRMs, NRRs = [], []
 RMs,RRs = [], []
+print()
+print("Calculating rough approximation of polytropes...")
 for p0 in p_values:
+    
     NonRelR, NonRelM= solveWithoutSwitch(p0, rel=False)
     pRR, pRM = solveWithoutSwitch(p0, rel=True)
     NRRs.append(NonRelR)
