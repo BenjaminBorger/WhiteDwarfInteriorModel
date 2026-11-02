@@ -8,6 +8,7 @@ tests = 1000
 
 
 
+
 def make_objs(numTests=tests, start=1/500, end=2, radius_km=7000):
     masses = start + end - np.geomspace(start, end, numTests)  # solar masses
     masses = np.sort(masses)

@@ -11,6 +11,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from pdeSolver import solveWithSwitch,solveWithoutSwitch, find_eps_c,delete_last_line
 ###Problem at the moment is that the radius it calculates is differnt to the radius I give it. 
 import shutil
+import pandas as pd
+import os
 
 
 
@@ -22,82 +24,72 @@ def loadbar(i, total, prefix="", suffix="", decimals=1, fill='>'):
 #plotting
 #could maybe add some sort of circle that has the pressure so as the radius goes outwards, it changes colour (bit naff)
 
-
-
-
 #Sean Rs Idea - make iterations more spaced out until the end where they get tighter - run faster
 
 objectsLength = len(obj)
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-FMasses = []
-FRadii = []
-    
-def SwitchedGraph():
-    
-    limit_mass = -np.inf      # largest finite mass seen across all objects
-    limit_radius = None  
-    objectsLength = len(obj)
-    loadbar(i+1, objectsLength, suffix = "complete")
-    
-    realMass = obj[i][1]*M_sun.value #import the real mass and radius for comparison
-    realRadius = obj[i][0]*1000
-    #print(realMass)
-    #print(realRadius)
-    iterEps_C = find_eps_c(i, rel=False) # 
-    if iterEps_C is None: # if theres no good value of epsilon
-        print()
-        print(f"Skipping object {i}: no valid epsilon_c")
-        return None
-        #continue
-    r, m, radius_grid, states = solveWithSwitch(iterEps_C,allpoints=True)
-    FMasses.append(m)
-    FRadii.append(r)
-    #print(f"modeled: {r/1000 :.2f} km , input: {realRadius/1000 :.2f} km , "
-        #f"difference: {((r - realRadius)/1000):.2f} km")
-    #mass_profile = states[0]
-    #pressure_profile = states[1]
-    mass_profile = np.asarray(states[0])
-    pressure_profile = np.asarray(states[1])
-    radius_grid = np.asarray(radius_grid)
+CACHE_DIR = os.path.join(BASE_DIR, "cache")
+os.makedirs(CACHE_DIR, exist_ok=True)
 
-    
-    valid = np.where(np.isfinite(mass_profile))[0] # last index where the mass is still a real number
-    if len(valid) > 0:
-        j = valid[-1]
-        if mass_profile[j] > limit_mass:
-            limit_mass = mass_profile[j]
-            limit_radius = radius_grid[j]
-    
-    return mass_profile/M_sun.value,radius_grid/1000,limit_mass
+CSV_FILE = os.path.join(
+    CACHE_DIR,
+    f"epsilon_values_{objectsLength}_iterations.csv"
+)
 
 
-    #plt.show()
+def run_stars(use_cache=True):
 
+    if use_cache and os.path.exists(CSV_FILE): 
+        cache = pd.read_csv(CSV_FILE, index_col="Star")
+    else:
+        cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star")
 
-#plt.loglog(FMasses,FRadii)
-loadbar(0, objectsLength, suffix = "complete")
-for i in range(objectsLength):
-    
-    #delete_last_line() 
-    try: 
-        ms,rs,limit_mass = SwitchedGraph()
-    except:
-        break
-    
-    plt.plot(ms,rs)
+    rows = []
+    limit_mass = -np.inf
+    loadbar(0, objectsLength, suffix="complete")
 
-#plt.axhline(y=limit_mass, color='r', linestyle='--',label=f'Limiting mass = {limit_mass:.3e} kg')
+    for i in range(objectsLength):
+        loadbar(i + 1, objectsLength, suffix="complete")
 
+        # use the already tabulated value if there is one, otherwise compute it
+        if i in cache.index:
+            eps_c = cache.loc[i, "epsilon"]
+        else:
+            eps_c = find_eps_c(i, rel=False)
 
+        if eps_c is None or np.isnan(eps_c):
+            print(f"\nSkipping object {i}: no valid epsilon_c")
+            break
 
+        r, m, radius_grid, states = solveWithSwitch(eps_c, allpoints=True)
+        limit_mass = max(limit_mass, m)
+        plt.plot(np.asarray(states[0]) / M_sun.value,
+                 np.asarray(radius_grid) / 1000)
 
+        rows.append({
+            "Star": i,
+            "epsilon": eps_c,
+            "RealMass_Msun": obj[i][1],
+            "RealRadius_km": obj[i][0],
+            "ModelMass_Msun": m / M_sun.value,
+            "ModelRadius_km": r / 1000,
+        })
+
+    results = pd.DataFrame(rows).set_index("Star")
+    results[["epsilon"]].to_csv(CSV_FILE)      #save after loop
+    return results, limit_mass
+
+results, limit_mass = run_stars()
+print(results)
 
 p_values = np.logspace(21,23, 60) # pascals
 
 NRMs, NRRs = [], []
 RMs,RRs = [], []
 for p0 in p_values:
-    NonRelR, NonRelM = solveWithoutSwitch(p0, rel=False)
+    NonRelR, NonRelM= solveWithoutSwitch(p0, rel=False)
     pRR, pRM = solveWithoutSwitch(p0, rel=True)
     NRRs.append(NonRelR)
     NRMs.append(NonRelM)
