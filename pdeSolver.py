@@ -38,6 +38,33 @@ def f(r,y,K,gamma):
              / (1 - 2*G*M/(r*c**2)) # relatavistic pressure curve
         return [dm,dP]
 
+def solveWithoutSwitch(p0,rel = False, allpoints = False):
+        if rel:
+             K,gamma = K_rel,gammaRel
+        else:
+             K,gamma = K_nonrel,gammaNonRel
+
+        
+        eps = (p0 / K)**(1/gamma)
+        r0=0.1 # initial radius of 1 meter to stop a div by zero error
+        m0 = 4*np.pi/3 * r0**3 * eps / c**2
+
+        def surface(r, y, K, gamma):
+                    return y[1] - 1e-60 * p0
+        surface.terminal = True
+        surface.direction = -1
+
+        totalStarisRel = solve_ivp(f,(r0,10e9),[m0,p0],args = (K,gamma),events = surface, rtol = 1e-8,atol = [m0*1e-10, p0*1e-12],dense_output= allpoints) #simultaneously solve the equations
+        R = totalStarisRel.t_events[0][0]
+        M = totalStarisRel.y_events[0][0][0] # takes the last mass of star
+        rs = totalStarisRel.t # these are all the values of radius 
+        ys = totalStarisRel.y # all the fvlaues of mass
+        if allpoints: 
+             return R,M,rs,ys
+        return R,M
+        
+        
+
 def solveWithSwitch(eps_c,allpoints = False): # eps_c is given through findepsc
     #delete_last_line()
     #if not allpoints: print(f"Central value of Epsilon Guess = {eps_c}")
