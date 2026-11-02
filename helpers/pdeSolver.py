@@ -5,7 +5,7 @@ from scipy.optimize import brentq
 from scipy.constants import G, c, hbar, m_e, m_n
 from astropy.constants import M_sun
 import sys
-from starDatabase import obj
+from helpers.starDatabase import obj
 from numba import njit
 
 

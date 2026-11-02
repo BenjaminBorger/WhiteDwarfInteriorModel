@@ -1,14 +1,14 @@
-from starDatabase import obj, tests
+from helpers.starDatabase import obj, tests
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 from scipy.constants import G, c, hbar, m_e, m_n
 from astropy.constants import M_sun
-import pdeSolver
+import helpers.pdeSolver as pdeSolver
 from matplotlib.colors import LinearSegmentedColormap
 #from pdeSolver import gammaNonRel,gammaRel,K_nonrel,K_rel,triggerPressure
-from pdeSolver import solveWithSwitch,solveWithoutSwitch, find_eps_c,delete_last_line
+from helpers.pdeSolver import solveWithSwitch,solveWithoutSwitch, find_eps_c,delete_last_line
 ###Problem at the moment is that the radius it calculates is differnt to the radius I give it. 
 import shutil
 import pandas as pd
