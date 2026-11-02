@@ -38,7 +38,7 @@ def f(r,y,K,gamma):
              / (1 - 2*G*M/(r*c**2)) # relatavistic pressure curve
         return [dm,dP]
 
-def solve(eps_c,allpoints = False): # eps_c is given through findepsc
+def solveWithSwitch(eps_c,allpoints = False): # eps_c is given through findepsc
     #delete_last_line()
     #if not allpoints: print(f"Central value of Epsilon Guess = {eps_c}")
     #else: print(f"Central value of Epsilon Final = {eps_c}")
@@ -111,7 +111,7 @@ def find_eps_c(iter,rel): # i took this out. rel is boolean True or false if tru
     intervals= []#these will be the intervals in epsilonspace within which contain a crossover of sign
     for i in range(len(epsilonSpace)): # loop for each value in epsilon space(will loop 40 times)
         
-        R,M = solve(epsilonSpace[i], allpoints=False) # solve the PDE for this value of epsilon and only return the finishing mass and radius
+        R,M = solveWithSwitch(epsilonSpace[i], allpoints=False) # solve the PDE for this value of epsilon and only return the finishing mass and radius
         iteratedRs[i] = R # add these returned values to thir respective arrays
         iteratedMs[i] = M
 
@@ -131,12 +131,12 @@ def find_eps_c(iter,rel): # i took this out. rel is boolean True or false if tru
     for interval in intervals: # go through each interval
         def massDiffFunc(epsilonVal): #simply solves the equations with this value of epsilon and creates a function with m-realMass
             
-            r,m = solve(epsilonVal,allpoints=False)
+            r,m = solveWithSwitch(epsilonVal,allpoints=False)
             
             return m-realMass
 
         def radiusDiffFunc(epsilonVal,allpoints=False): # not sure whether to compare radius as well
-            r,m = solve(e)
+            r,m = solveWithSwitch(e)
             return r-realRadius
 
         goodEpsiM = brentq(massDiffFunc,interval[0],interval[1]) # hones in on the values of epsilon which return a zero for our defined function 
@@ -150,7 +150,7 @@ def find_eps_c(iter,rel): # i took this out. rel is boolean True or false if tru
     for e in goodEpsis: # for each good espilon 
         '''for each good espsilon, check whether the error is better than the last one 
         if its the best, when the loop ends itll return this value'''
-        r,m = solve(e,allpoints=False)
+        r,m = solveWithSwitch(e,allpoints=False)
         if (np.abs(r/realRadius-1))<bestErr:
             bestE = e
             bestErr = np.abs(r/realRadius-1)

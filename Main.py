@@ -8,7 +8,7 @@ from astropy.constants import M_sun
 import pdeSolver
 from matplotlib.colors import LinearSegmentedColormap
 #from pdeSolver import gammaNonRel,gammaRel,K_nonrel,K_rel,triggerPressure
-from pdeSolver import solve, find_eps_c,delete_last_line
+from pdeSolver import solveWithSwitch, find_eps_c,delete_last_line
 ###Problem at the moment is that the radius it calculates is differnt to the radius I give it. 
 import shutil
 
@@ -44,7 +44,7 @@ for i in range(objectsLength):
         print(f"Skipping object {i}: no valid epsilon_c")
         break
         #continue
-    r, m, radius_grid, states = solve(iterEps_C,allpoints=True)
+    r, m, radius_grid, states = solveWithSwitch(iterEps_C,allpoints=True)
     FMasses.append(m)
     FRadii.append(r)
     #print(f"modeled: {r/1000 :.2f} km , input: {realRadius/1000 :.2f} km , "
@@ -63,7 +63,7 @@ for i in range(objectsLength):
             limit_mass = mass_profile[j]
             limit_radius = radius_grid[j]
     
-    plt.plot(mass_profile/M_sun.value,radius_grid/1000)
+    plt.loglog(mass_profile/M_sun.value,radius_grid/1000)
     #plt.show()
 
 
@@ -78,8 +78,8 @@ plt.title('Rel Rad Mass Relation')
 #plt.legend()
 plt.xlabel('Mass (Solar Masses)')
 plt.ylabel('Radius (Km)') 
-plt.xlim(0,1.5)
-plt.ylim(0,15000)
+#plt.xlim(0,1.5)
+#plt.ylim(0,15000)
 plt.show()
 
 
