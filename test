@@ -19,8 +19,8 @@ lc = LineCollection(segments, cmap='viridis', norm=norm)
 lc.set_array(x)
 lc.set_linewidth(3)
 
-#line = ax.add_collection(lc)
-#fig.colorbar(line, ax=ax, label='Gradient value along X')
+line = ax.add_collection(lc)
+fig.colorbar(line, ax=ax, label='Gradient value along X')
 
 ax.set_xlim(x.min(), x.max())
 ax.set_ylim(-1.5, 1.5)

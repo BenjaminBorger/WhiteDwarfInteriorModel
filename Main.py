@@ -14,6 +14,7 @@ from helpers.pdeSolver import solveWithSwitch,solveWithoutSwitch, find_eps_c,del
 import shutil
 import pandas as pd
 import os
+from matplotlib.colors import LogNorm
 
 class WhiteDwarf:
     def __init__(self, index, rPoints, mPoints, pPoints):
@@ -138,6 +139,21 @@ ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
 #plt.xscale('log')
 #plt.yscale('log')
 #######################################No Switch End ################################################
+# one shared norm for every star
+all_p = np.concatenate([np.asarray(p.pPoints) for p in profiles])
+all_p = all_p[all_p > 0]
+sorted_p = np.sort(all_p)
+from matplotlib.colors import TwoSlopeNorm
+from helpers.pdeSolver import triggerPressure   # whatever name/units you use
+def rank_norm(p):
+    # fraction of all points with pressure below p, in [0, 1]
+    return np.searchsorted(sorted_p, p) / len(sorted_p)
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+
+#norm = Normalize(0,1) # center around center pressure
+norm = TwoSlopeNorm(vcenter=rank_norm(triggerPressure), vmin=0, vmax=1) # centre around trigger pressure
+
 
 
 #unpack starprofiles into seperate classes and plot each
@@ -147,13 +163,27 @@ for i in range(len(profiles)):
     pressureProfile = profiles[i].pPoints
     #print(massProfile)
     #print(radiiProfile)
-    ax.plot(massProfile,radiiProfile)
+    points = np.array([massProfile, radiiProfile]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    
+    #norm = plt.Normalize(pressureProfile.min(), pressureProfile.max())
+    lc = LineCollection(segments, cmap='coolwarm', norm=norm)
+    mid_p = 0.5 * (pressureProfile[:-1] + pressureProfile[1:])
+    lc.set_array(rank_norm(mid_p))
+    line = ax.add_collection(lc)
+
+
+    #ax.plot(massProfile,radiiProfile)
+
 
 print(f"Limiting Mass: {limit_mass/M_sun.value} solar masses")
-ax.title('Rel Rad Mass Relation')
+ax.set_title('Rel Rad Mass Relation')
+from matplotlib.cm import ScalarMappable
+sm = ScalarMappable(norm=norm, cmap='coolwarm')
+fig.colorbar(ScalarMappable(norm=norm, cmap='coolwarm'), ax=ax, label='Pressure percentile')
 #plt.legend()
-ax.xlabel('Mass (Solar Masses)')
-ax.ylabel('Radius (Km)') 
-ax.xlim(0,1.46)
-ax.ylim(0,20000)
+ax.set_xlabel('Mass (Solar Masses)')
+ax.set_ylabel('Radius (Km)') 
+ax.set_xlim(0,1.46)
+ax.set_ylim(0,20000)
 plt.show()
