@@ -1,0 +1,27 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import LineCollection
+
+# 1. Generate sample data (e.g., a sine wave)
+x = np.linspace(0, 3 * np.pi, 500)
+y = np.sin(x)
+
+# 2. Prepare points as an N x 1 x 2 array for segments
+points = np.array([x, y]).T.reshape(-1, 1, 2)
+segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+# 3. Create a LineCollection and map values (e.g., x-position or derivative) to a colormap
+fig, ax = plt.subplots(figsize=(8, 4))
+norm = plt.Normalize(x.min(), x.max())
+lc = LineCollection(segments, cmap='viridis', norm=norm)
+
+# Set the array used to color the segments (here we color along x)
+lc.set_array(x)
+lc.set_linewidth(3)
+
+#line = ax.add_collection(lc)
+#fig.colorbar(line, ax=ax, label='Gradient value along X')
+
+ax.set_xlim(x.min(), x.max())
+ax.set_ylim(-1.5, 1.5)
+plt.show()

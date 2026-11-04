@@ -1,6 +1,7 @@
-from helpers.starDatabase import obj, tests
+from helpers.starDatabase import obj, tests, endpoint
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 from scipy.constants import G, c, hbar, m_e, m_n
@@ -14,12 +15,20 @@ import shutil
 import pandas as pd
 import os
 
+class WhiteDwarf:
+    def __init__(self, index, rPoints, mPoints, pPoints):
+        self.index = index
+        self.rPoints = rPoints
+        self.mPoints = mPoints
+        self.pPoints = pPoints
+        
+
 
 
 def loadbar(i, total, prefix="", suffix="", decimals=1, fill='>'):
-    pct = f'{500 * i / total:.{decimals}f}%'
+    pct = f'{100 * i / total:.{decimals}f}%'
     length = max(1, shutil.get_terminal_size().columns - len(f'{prefix} || {pct} {suffix}') - 1)
-    n = length * i*5 // total
+    n = length * i // total
     print(f'\r{prefix} |{fill * n}{"-" * (length - n)}| {pct} {suffix}', end='\r' if i < total else '\n')
 #plotting
 #could maybe add some sort of circle that has the pressure so as the radius goes outwards, it changes colour (bit naff)
@@ -35,24 +44,35 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 CSV_FILE = os.path.join(
     CACHE_DIR,
-    f"epsilon_values_{objectsLength}_iterations.csv"
+    f"e_val_to_{endpoint}_w_{objectsLength}_iterations.csv"
 )
-
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 def run_stars(use_cache=True):
+    cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star")
 
-    if use_cache and os.path.exists(CSV_FILE): 
+    if use_cache and os.path.exists(CSV_FILE):
+        print(f'Cache found of epsilon values up to {objectsLength} for masses below {endpoint}')
         cache = pd.read_csv(CSV_FILE, index_col="Star")
+        print("Cache read...")
     else:
         cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star")
-        print(f'No cache found with these iterations. Preparing to create new cache with {objectsLength} + iterations')
+        print(f'No cache found with these iterations. Creating new cache with {objectsLength} iterations')
         print('Solving...')
-        print()
-    rows = []
+    
+    
+    
+    rows = [] #administrative (constant things)
+    starProfiles = [] #make these a collection of objects (stars)
     limit_mass = -np.inf
     loadbar(0, objectsLength, suffix="complete")
 
-    for i in range(objectsLength):
+    for i in range(objectsLength): #each star in database
         loadbar(i + 1, objectsLength, suffix="complete")
 
         # use the already tabulated value if there is one, otherwise compute it
@@ -66,33 +86,46 @@ def run_stars(use_cache=True):
 
         r, m, radius_grid, states = solveWithSwitch(eps_c, allpoints=True)
         limit_mass = max(limit_mass, m)
-        plt.plot(np.asarray(states[0]) / M_sun.value,
-                 np.asarray(radius_grid) / 1000)
+
+
+        ps = states[1]
+        
+        ###make it so that it shifts from one colour to another based on whether 
+        # pressure is relatavistic at that point have an expression for pressure somewhere?
+        
+       # plt.plot(np.asarray(states[0]) / M_sun.value, np.asarray(radius_grid) / 1000)
+
+        
+        starProfiles.append(WhiteDwarf(i,radius_grid/1000,states[0]/M_sun,states[1]))
+        
 
         rows.append({
             "Star": i,
             "epsilon": eps_c,
             "RealMass_Msun": obj[i][1],
-            "RealRadius_km": obj[i][0],
-            "ModelMass_Msun": m / M_sun.value,
-            "ModelRadius_km": r / 1000,
+            "ModelFinalMass_Msun": m / M_sun.value,
+            "ModelFinalRadius_km": r / 1000,
         })
 
     results = pd.DataFrame(rows).set_index("Star")
+    #pointsMRP = pd.DataFrame(starProfile)
     results[["epsilon"]].to_csv(CSV_FILE)      #save after loop
-    return results, limit_mass
+    return results, limit_mass, starProfiles  #pointsMRP
 
-results, limit_mass = run_stars()
+results, limit_mass, profiles = run_stars()
 
 
+fig,ax = plt.subplots()
+
+
+
+#######################################No Switch################################################
 p_values = np.logspace(21,23, 60) # pascals
-
 NRMs, NRRs = [], []
 RMs,RRs = [], []
 print()
 print("Calculating rough approximation of polytropes...")
 for p0 in p_values:
-    
     NonRelR, NonRelM= solveWithoutSwitch(p0, rel=False)
     pRR, pRM = solveWithoutSwitch(p0, rel=True)
     NRRs.append(NonRelR)
@@ -100,17 +133,27 @@ for p0 in p_values:
     RRs.append(pRR)
     RMs.append(pRM)
 
-plt.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)
-plt.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
+ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)
+ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
 #plt.xscale('log')
 #plt.yscale('log')
+#######################################No Switch End ################################################
 
+
+#unpack starprofiles into seperate classes and plot each
+for i in range(len(profiles)):
+    radiiProfile = profiles[i].rPoints
+    massProfile = profiles[i].mPoints
+    pressureProfile = profiles[i].pPoints
+    #print(massProfile)
+    #print(radiiProfile)
+    ax.plot(massProfile,radiiProfile)
 
 print(f"Limiting Mass: {limit_mass/M_sun.value} solar masses")
-plt.title('Rel Rad Mass Relation')
+ax.title('Rel Rad Mass Relation')
 #plt.legend()
-plt.xlabel('Mass (Solar Masses)')
-plt.ylabel('Radius (Km)') 
-plt.xlim(0,1.46)
-plt.ylim(0,20000)
+ax.xlabel('Mass (Solar Masses)')
+ax.ylabel('Radius (Km)') 
+ax.xlim(0,1.46)
+ax.ylim(0,20000)
 plt.show()

@@ -106,12 +106,11 @@ def solveWithSwitch(eps_c,allpoints = False): # eps_c is given through findepsc
         nonRelPart = solve_ivp(f,(r_event,10e9),y_event,args = (K_nonrel,gammaNonRel),events = surface, rtol = 1e-8,atol = y_event*10e-12,dense_output= allpoints) #simultaneously solve the equations
         R = nonRelPart.t_events[0][0] # Takes the last radius of star
         M = nonRelPart.y_events[0][0][0] # takes the last mass of star
-
         rs = np.concatenate([relPart.t,nonRelPart.t]) # combines the two points from rel to non rel
         ys = np.concatenate([relPart.y,nonRelPart.y],axis=1)
 
 
-    if allpoints == True: return (R,M, rs, ys) # return all points if needed (for plot)
+    if allpoints == True: return (R,M, rs, ys) # return all points if needed (for plot) #ys [mass,pressure]
     else: return (R,M) # just return last masses for comparisom
 
 
