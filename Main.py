@@ -16,7 +16,7 @@ import pandas as pd
 import os
 from matplotlib.colors import LogNorm
 
-class WhiteDwarf:
+class WhiteDwarf: # creates an object: white dwarf which lists will be stored contianing each value. needed for plotting later. 
     def __init__(self, index, rPoints, mPoints, pPoints):
         self.index = index
         self.rPoints = rPoints
@@ -31,38 +31,39 @@ def loadbar(i, total, prefix="", suffix="", decimals=1, fill='>'):
     length = max(1, shutil.get_terminal_size().columns - len(f'{prefix} || {pct} {suffix}') - 1)
     n = length * i // total
     print(f'\r{prefix} |{fill * n}{"-" * (length - n)}| {pct} {suffix}', end='\r' if i < total else '\n')
+
 #plotting
 #could maybe add some sort of circle that has the pressure so as the radius goes outwards, it changes colour (bit naff)
 
 #Sean Rs Idea - make iterations more spaced out until the end where they get tighter - run faster
 
-objectsLength = len(obj)
-import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+objectsLength = len(obj) # length of iterations planned. 
+import os  #for files
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # folder currently in
 
-CACHE_DIR = os.path.join(BASE_DIR, "cache")
-os.makedirs(CACHE_DIR, exist_ok=True)
+CACHE_DIR = os.path.join(BASE_DIR, "cache") #folder with cache 
+os.makedirs(CACHE_DIR, exist_ok=True) #would make directory if didnt exis
 
 CSV_FILE = os.path.join(
     CACHE_DIR,
     f"e_val_to_{endpoint}_w_{objectsLength}_iterations.csv"
-)
-def is_float(s):
+)#links csv file with eps values to be created and read from cache directory
+def is_float(s): # little function i dont really need
     try:
         float(s)
         return True
     except ValueError:
         return False
 
-def run_stars(use_cache=True):
-    cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star")
-
-    if use_cache and os.path.exists(CSV_FILE):
-        print(f'Cache found of epsilon values up to {objectsLength} for masses below {endpoint}')
-        cache = pd.read_csv(CSV_FILE, index_col="Star")
-        print("Cache read...")
-    else:
-        cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star")
+def run_stars(use_cache=True): # meat of the bloody matter
+    cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star") # establish what is cached information - epsilon values
+    print("Searching Cache...")
+    if use_cache and os.path.exists(CSV_FILE): # if im allowed to use cache and there exists the csv file WITH THE SAME NAME! use that
+        print(f'Cache found of epsilon values up to {objectsLength} for masses below {endpoint} solar masses.#')
+        cache = pd.read_csv(CSV_FILE, index_col="Star")# read the file
+        print("Reading Cache...")
+    else: # if no cache with same name exists
+        cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star") # create new dataframe 
         print(f'No cache found with these iterations. Creating new cache with {objectsLength} iterations')
         print('Solving...')
     
@@ -70,26 +71,25 @@ def run_stars(use_cache=True):
     
     rows = [] #administrative (constant things)
     starProfiles = [] #make these a collection of objects (stars)
-    limit_mass = -np.inf
+    limit_mass = -np.inf # infinitely small limit mass so everything wil be bigger. Important to have this outside loop or it would reset
     loadbar(0, objectsLength, suffix="complete")
 
     for i in range(objectsLength): #each star in database
         loadbar(i + 1, objectsLength, suffix="complete")
 
-        # use the already tabulated value if there is one, otherwise compute it
-        if i in cache.index:
-            eps_c = cache.loc[i, "epsilon"]
+        if i in cache.index: #if we have a cache index for this star
+            eps_c = cache.loc[i, "epsilon"] # epsilon c equals the thing in that table
         else:
-            eps_c = find_eps_c(i, rel=False)
+            eps_c = find_eps_c(i, rel=False) # find eps c if not in table (if no cache) this is the bit annoying ignore rel = False. been taken out
 
-        if eps_c is None or np.isnan(eps_c):
-            break
+        if eps_c is None or np.isnan(eps_c): # as soon as we hit a wall and cant compute any more, stop the loop
+            break #help help
 
-        r, m, radius_grid, states = solveWithSwitch(eps_c, allpoints=True)
-        limit_mass = max(limit_mass, m)
+        r, m, radius_grid, states = solveWithSwitch(eps_c, allpoints=True) # solve the equation for this star and return final radius r final mass m a grid of all the radii and the states [mass,pressure]
+        limit_mass = max(limit_mass, m) # largest mass is the maximum between the largest mass up to now and the largest mass just returned
 
 
-        ps = states[1]
+        ps = states[1] # why is this here
         
         ###make it so that it shifts from one colour to another based on whether 
         # pressure is relatavistic at that point have an expression for pressure somewhere?
@@ -97,10 +97,10 @@ def run_stars(use_cache=True):
        # plt.plot(np.asarray(states[0]) / M_sun.value, np.asarray(radius_grid) / 1000)
 
         
-        starProfiles.append(WhiteDwarf(i,radius_grid/1000,states[0]/M_sun,states[1]))
+        starProfiles.append(WhiteDwarf(i,radius_grid/1000,states[0]/M_sun,states[1])) # add object to starProfiles with its index, all the raddi and corresponding masses and pressures
         
 
-        rows.append({
+        rows.append({ # static quantaties in a dictionary
             "Star": i,
             "epsilon": eps_c,
             "RealMass_Msun": obj[i][1],
@@ -108,37 +108,40 @@ def run_stars(use_cache=True):
             "ModelFinalRadius_km": r / 1000,
         })
 
-    results = pd.DataFrame(rows).set_index("Star")
+    results = pd.DataFrame(rows).set_index("Star") # 
     #pointsMRP = pd.DataFrame(starProfile)
-    results[["epsilon"]].to_csv(CSV_FILE)      #save after loop
-    return results, limit_mass, starProfiles  #pointsMRP
+    results[["epsilon"]].to_csv(CSV_FILE)      #save epsilon file after loop
+    return results, limit_mass, starProfiles  # return the static stuff, the largest mass and the list of white dwarf objects with all the points for plotting
 
-results, limit_mass, profiles = run_stars()
+results, limit_mass, profiles = run_stars() # call the function!
 
 
-fig,ax = plt.subplots()
+fig,ax = plt.subplots()#create subplots
 
 
 
 #######################################No Switch################################################
-p_values = np.logspace(21,23, 60) # pascals
-NRMs, NRRs = [], []
-RMs,RRs = [], []
-print()
+p_values = np.logspace(21,23, 60) # pascals. test values of presure
+NRMs, NRRs = [], [] # Non Rel Masses and Non Rel Radii
+RMs,RRs = [], [] # Rel Masses and Rel Radii
+print() # newline
 print("Calculating rough approximation of polytropes...")
-for p0 in p_values:
-    NonRelR, NonRelM= solveWithoutSwitch(p0, rel=False)
+for p0 in p_values: # for each P value
+    NonRelR, NonRelM= solveWithoutSwitch(p0, rel=False) # get the Rs and Ms with imputted p0
     pRR, pRM = solveWithoutSwitch(p0, rel=True)
     NRRs.append(NonRelR)
     NRMs.append(NonRelM)
     RRs.append(pRR)
     RMs.append(pRM)
 
-ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)
+ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)#plot
 ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
 #plt.xscale('log')
 #plt.yscale('log')
 #######################################No Switch End ################################################
+
+
+
 # one shared norm for every star
 all_p = np.concatenate([np.asarray(p.pPoints) for p in profiles])
 all_p = all_p[all_p > 0]
@@ -180,7 +183,14 @@ print(f"Limiting Mass: {limit_mass/M_sun.value} solar masses")
 ax.set_title('Rel Rad Mass Relation')
 from matplotlib.cm import ScalarMappable
 sm = ScalarMappable(norm=norm, cmap='coolwarm')
-fig.colorbar(ScalarMappable(norm=norm, cmap='coolwarm'), ax=ax, label='Pressure percentile')
+cbar = fig.colorbar(sm, ax=ax, label='Pressure (Pa)')
+
+ticks = np.linspace(0, 1, 6)                    
+cbar.set_ticks(ticks)
+
+
+
+cbar.set_ticklabels([f'{np.quantile(sorted_p, t):.1e}' for t in ticks])
 #plt.legend()
 ax.set_xlabel('Mass (Solar Masses)')
 ax.set_ylabel('Radius (Km)') 
