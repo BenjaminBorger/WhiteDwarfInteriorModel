@@ -23,9 +23,6 @@ class WhiteDwarf: # creates an object: white dwarf which lists will be stored co
         self.mPoints = mPoints
         self.pPoints = pPoints
         
-
-
-
 def loadbar(i, total, prefix="", suffix="", decimals=1, fill='>'):
     pct = f'{100 * i / total:.{decimals}f}%'
     length = max(1, shutil.get_terminal_size().columns - len(f'{prefix} || {pct} {suffix}') - 1)
@@ -64,7 +61,7 @@ def run_stars(use_cache=True): # meat of the bloody matter
         print("Reading Cache...")
     else: # if no cache with same name exists
         cache = pd.DataFrame(columns=["epsilon"]).rename_axis("Star") # create new dataframe 
-        print(f'No cache found with these iterations. Creating new cache with {objectsLength} iterations')
+        print(f'No cache found with these iterations and endpoint. Creating new cache with {objectsLength} iterations with a maximum of {endpoint} solar masses.')
         print('Solving...')
     
     
@@ -179,18 +176,22 @@ for i in range(len(profiles)):
     #ax.plot(massProfile,radiiProfile)
 
 
-print(f"Limiting Mass: {limit_mass/M_sun.value} solar masses")
+print(f"Limiting Mass from model: {limit_mass/M_sun.value} solar masses")
+print(f'Fully relatavistic star\'s mass: {RMs[-1]/M_sun.value} solar masses')
 ax.set_title('Rel Rad Mass Relation')
 from matplotlib.cm import ScalarMappable
 sm = ScalarMappable(norm=norm, cmap='coolwarm')
 cbar = fig.colorbar(sm, ax=ax, label='Pressure (Pa)')
 
-ticks = np.linspace(0, 1, 6)                    
+ticks = np.linspace(0, 1, 6)
 cbar.set_ticks(ticks)
 
+labels = []
+for t in ticks:
+    p = np.quantile(sorted_p, t)
+    labels.append('0' if p < 100 else f'{p:.1e}')
 
-
-cbar.set_ticklabels([f'{np.quantile(sorted_p, t):.1e}' for t in ticks])
+cbar.set_ticklabels(labels)
 #plt.legend()
 ax.set_xlabel('Mass (Solar Masses)')
 ax.set_ylabel('Radius (Km)') 
