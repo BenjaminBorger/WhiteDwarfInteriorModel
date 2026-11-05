@@ -17,7 +17,7 @@ def delete_last_line(): # got from stackoverflow https://stackoverflow.com/quest
 
 
 mu_e     = 2    #for carbon
-gammaRel = 4/3
+gammaRel = 4/3 
 gammaNonRel = 5/3
 K_nonrel = hbar**2/(15*np.pi**2*m_e) * (3*np.pi**2/(mu_e*m_n*c**2))**(5/3)
 K_rel    = hbar*c/(12*np.pi**2)      * (3*np.pi**2/(mu_e*m_n*c**2))**(4/3)
@@ -47,7 +47,7 @@ def solveWithoutSwitch(p0,rel = False, allpoints = False):
         
         eps = (p0 / K)**(1/gamma)
         r0=0.1 # initial radius of 1 meter to stop a div by zero error
-        m0 = 4*np.pi/3 * r0**3 * eps / c**2
+        m0 = 4*np.pi/3 * (r0**3) * eps / (c**2)
 
         def surface(r, y, K, gamma):
                     return y[1] - 1e-60 * p0

@@ -155,7 +155,7 @@ from matplotlib.cm import ScalarMappable
 norm = TwoSlopeNorm(vcenter=rank_norm(triggerPressure), vmin=0, vmax=1) # centre around trigger pressure
 
 
-
+colourMap = 'managua_r'
 #unpack starprofiles into seperate classes and plot each
 for i in range(len(profiles)):
     radiiProfile = profiles[i].rPoints
@@ -167,7 +167,7 @@ for i in range(len(profiles)):
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
     
     #norm = plt.Normalize(pressureProfile.min(), pressureProfile.max())
-    lc = LineCollection(segments, cmap='coolwarm', norm=norm)
+    lc = LineCollection(segments, cmap=colourMap, norm=norm)
     mid_p = 0.5 * (pressureProfile[:-1] + pressureProfile[1:])
     lc.set_array(rank_norm(mid_p))
     line = ax.add_collection(lc)
@@ -180,7 +180,7 @@ print(f"Limiting Mass from model: {limit_mass/M_sun.value} solar masses")
 print(f'Fully relatavistic star\'s mass: {RMs[-1]/M_sun.value} solar masses')
 ax.set_title('Rel Rad Mass Relation')
 from matplotlib.cm import ScalarMappable
-sm = ScalarMappable(norm=norm, cmap='coolwarm')
+sm = ScalarMappable(norm=norm, cmap=colourMap)
 cbar = fig.colorbar(sm, ax=ax, label='Pressure (Pa)')
 
 ticks = np.linspace(0, 1, 6)
