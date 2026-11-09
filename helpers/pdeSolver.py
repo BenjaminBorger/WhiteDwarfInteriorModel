@@ -19,8 +19,8 @@ def delete_last_line(): # got from stackoverflow https://stackoverflow.com/quest
 mu_e     = 2    #for carbon
 gammaRel = 4/3 
 gammaNonRel = 5/3
-K_nonrel = hbar**2/(15*np.pi**2*m_e) * (3*np.pi**2/(mu_e*m_n*c**2))**(5/3)
-K_rel    = hbar*c/(12*np.pi**2)      * (3*np.pi**2/(mu_e*m_n*c**2))**(4/3)
+K_nonrel = hbar**2/(15*np.pi**2*m_e) * ((3*np.pi**2)/(mu_e*m_n*c**2))**(5/3)
+K_rel    = hbar*c/(12*np.pi**2)      * ((3*np.pi**2)/(mu_e*m_n*c**2))**(4/3)
 #triggerPressure = ((m_e**4)*(c**5))/(12*(np.pi**2)*(hbar**3))
 
 eps_switch = np.e**((np.log(K_rel)-np.log(K_nonrel))/(gammaNonRel-gammaRel))
