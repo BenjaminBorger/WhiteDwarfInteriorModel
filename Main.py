@@ -125,7 +125,7 @@ fig,ax = plt.subplots()#create subplots
 p_values = np.logspace(21,23, 60) # pascals. test values of presure
 NRMs, NRRs = [], [] # Non Rel Masses and Non Rel Radii
 RMs,RRs = [], [] # Rel Masses and Rel Radii
-print() # newline
+#print() # newline
 print("Calculating rough approximation of polytropes...")
 for p0 in p_values: # for each P value
     NonRelR, NonRelM= solveWithoutSwitch(p0, rel=False) # get the Rs and Ms with imputted p0
@@ -153,7 +153,7 @@ plottingSwitch = False
 
 colourMap = 'managua_r'
 #unpack starprofiles into seperate classes and plot each
-def plotSwitch(profiles):
+def plotSwitch():
     results, limit_mass, profiles = run_stars()
     # one shared norm for every star
     all_p = np.concatenate([np.asarray(p.pPoints) for p in profiles])
@@ -198,7 +198,7 @@ def plotSwitch(profiles):
 
     cbar.set_ticklabels(labels)
     
-#plotSwitch()
+plotSwitch()
 
 
 print(f'Fully relatavistic star\'s mass: {RMs[-1]/M_sun.value} solar masses')
