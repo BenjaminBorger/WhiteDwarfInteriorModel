@@ -30,12 +30,13 @@ triggerPressure = K_rel*eps_switch**gammaRel
 which is when pressure = ((m_e**4)*(c**5))/(12*(pi**2)*(hbar**3))
 This will be called the trigger pressure '''
 @njit #speeds it up
+
 def f(r,y,K,gamma):
         M,P = y
         eps = (max(P, 0)/K)**(1/gamma) #inversion of polytope
         dm = 4*np.pi*r**2*eps/c**2  #first equation
         dP = -(G/(c**2*r**2))*(eps + P)*(M + 4*np.pi*r**3*P/c**2) \
-             / (1 - 2*G*M/(r*c**2)) # relatavistic pressure curve
+                / (1 - 2*G*M/(r*c**2)) # relatavistic pressure curve
         return [dm,dP]
 
 def solveWithoutSwitch(p0,rel = False, allpoints = False):
@@ -43,6 +44,7 @@ def solveWithoutSwitch(p0,rel = False, allpoints = False):
              K,gamma = K_rel,gammaRel
         else:
              K,gamma = K_nonrel,gammaNonRel
+             
 
         
         eps = (p0 / K)**(1/gamma)
@@ -88,15 +90,14 @@ def solveWithSwitch(eps_c,allpoints = False): # eps_c is given through findepsc
     m0 = 4*np.pi/3*r0**3*eps_c/c**2 # initial mass which will basiclaly equal zero
     
     
-    if p0<=triggerPressure:
+    if p0<=triggerPressure: # if nonrel
         p0 = K_nonrel*eps_c**gammaNonRel 
         totalStarisNonRel = solve_ivp(f,(r0,10e9),[m0,p0],args = (K_nonrel,gammaNonRel),events = surface, rtol = 1e-8,atol = [m0*1e-10, p0*1e-12],dense_output= allpoints) #simultaneously solve the equations
         R = totalStarisNonRel.t_events[0][0]
         M = totalStarisNonRel.y_events[0][0][0] # takes the last mass of star
         rs = totalStarisNonRel.t # these are all the values of radius 
         ys = totalStarisNonRel.y # all the fvlaues of mass
-    else:
-
+    else:# if rel
         relPart = solve_ivp(f,(r0,10e9),[m0,p0],args = (K_rel,gammaRel),events = [switch,surface], rtol = 1e-8,atol = [m0*1e-10, p0*1e-12],dense_output= allpoints) #simultaneously solve the equations
     
         r_event = relPart.t_events[0][0] # Takes the last radius of centre 

@@ -16,6 +16,10 @@ import pandas as pd
 import os
 from matplotlib.colors import LogNorm
 
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.serif"] = ["Times New Roman"]
+
 class WhiteDwarf: # creates an object: white dwarf which lists will be stored contianing each value. needed for plotting later. 
     def __init__(self, index, rPoints, mPoints, pPoints):
         self.index = index
@@ -110,7 +114,7 @@ def run_stars(use_cache=True): # meat of the bloody matter
     results[["epsilon"]].to_csv(CSV_FILE)      #save epsilon file after loop
     return results, limit_mass, starProfiles  # return the static stuff, the largest mass and the list of white dwarf objects with all the points for plotting
 
-results, limit_mass, profiles = run_stars() # call the function!
+ # call the function!
 
 
 fig,ax = plt.subplots()#create subplots
@@ -130,68 +134,77 @@ for p0 in p_values: # for each P value
     NRMs.append(NonRelM)
     RRs.append(pRR)
     RMs.append(pRM)
-
-ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)#plot
-ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
+def plotSimpMod():
+    ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)#plot
+    ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
+    
 #plt.xscale('log')
 #plt.yscale('log')
 #######################################No Switch End ################################################
 
+plotSimpMod() # plots simple polytopic approximations
+
+#plot vertical line at relatavistic limit 
+ax.vlines(RMs[-1]/M_sun.value, ymin=0,ymax=RRs[-1]/1000, linestyles = 'dashed', alpha = 0.2, colors = 'black')
+ # centre around trigger pressure
 
 
-# one shared norm for every star
-all_p = np.concatenate([np.asarray(p.pPoints) for p in profiles])
-all_p = all_p[all_p > 0]
-sorted_p = np.sort(all_p)
-from matplotlib.colors import TwoSlopeNorm
-from helpers.pdeSolver import triggerPressure   # whatever name/units you use
-def rank_norm(p):
-    # fraction of all points with pressure below p, in [0, 1]
-    return np.searchsorted(sorted_p, p) / len(sorted_p)
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
-
-#norm = Normalize(0,1) # center around center pressure
-norm = TwoSlopeNorm(vcenter=rank_norm(triggerPressure), vmin=0, vmax=1) # centre around trigger pressure
-
+plottingSwitch = False
 
 colourMap = 'managua_r'
 #unpack starprofiles into seperate classes and plot each
-for i in range(len(profiles)):
-    radiiProfile = profiles[i].rPoints
-    massProfile = profiles[i].mPoints
-    pressureProfile = profiles[i].pPoints
-    #print(massProfile)
-    #print(radiiProfile)
-    points = np.array([massProfile, radiiProfile]).T.reshape(-1, 1, 2)
-    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+def plotSwitch(profiles):
+    results, limit_mass, profiles = run_stars()
+    # one shared norm for every star
+    all_p = np.concatenate([np.asarray(p.pPoints) for p in profiles])
+    all_p = all_p[all_p > 0]
+    sorted_p = np.sort(all_p)
+    from matplotlib.colors import TwoSlopeNorm
+    from helpers.pdeSolver import triggerPressure   # whatever name/units you use
+    def rank_norm(p):
+        # fraction of all points with pressure below p, in [0, 1]
+        return np.searchsorted(sorted_p, p) / len(sorted_p)
+    from matplotlib.colors import Normalize
+    from matplotlib.cm import ScalarMappable
+
+    #norm = Normalize(0,1) # center around center pressure
+    norm = TwoSlopeNorm(vcenter=rank_norm(triggerPressure), vmin=0, vmax=1)
+    print(f"Limiting Mass from model: {limit_mass/M_sun.value} solar masses")
+    for i in range(len(profiles)):
+        radiiProfile = profiles[i].rPoints
+        massProfile = profiles[i].mPoints
+        pressureProfile = profiles[i].pPoints
+        #print(massProfile)
+        #print(radiiProfile)
+        points = np.array([massProfile, radiiProfile]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        
+        #norm = plt.Normalize(pressureProfile.min(), pressureProfile.max())
+        lc = LineCollection(segments, cmap=colourMap, norm=norm)
+        mid_p = 0.5 * (pressureProfile[:-1] + pressureProfile[1:])
+        lc.set_array(rank_norm(mid_p))
+        line = ax.add_collection(lc)
+    from matplotlib.cm import ScalarMappable
+    sm = ScalarMappable(norm=norm, cmap=colourMap)
+    cbar = fig.colorbar(sm, ax=ax, label='Pressure (Pa)')
+
+    ticks = np.linspace(0, 1, 6)
+    cbar.set_ticks(ticks)
+
+    labels = []
+    for t in ticks:
+        p = np.quantile(sorted_p, t)
+        labels.append('0' if p < 100 else f'{p:.1e}')
+
+    cbar.set_ticklabels(labels)
     
-    #norm = plt.Normalize(pressureProfile.min(), pressureProfile.max())
-    lc = LineCollection(segments, cmap=colourMap, norm=norm)
-    mid_p = 0.5 * (pressureProfile[:-1] + pressureProfile[1:])
-    lc.set_array(rank_norm(mid_p))
-    line = ax.add_collection(lc)
+#plotSwitch()
 
 
-    #ax.plot(massProfile,radiiProfile)
-
-
-print(f"Limiting Mass from model: {limit_mass/M_sun.value} solar masses")
 print(f'Fully relatavistic star\'s mass: {RMs[-1]/M_sun.value} solar masses')
-ax.set_title('Rel Rad Mass Relation')
-from matplotlib.cm import ScalarMappable
-sm = ScalarMappable(norm=norm, cmap=colourMap)
-cbar = fig.colorbar(sm, ax=ax, label='Pressure (Pa)')
+##ax.set_title('Rel Rad Mass Relation')
 
-ticks = np.linspace(0, 1, 6)
-cbar.set_ticks(ticks)
 
-labels = []
-for t in ticks:
-    p = np.quantile(sorted_p, t)
-    labels.append('0' if p < 100 else f'{p:.1e}')
-
-cbar.set_ticklabels(labels)
 #plt.legend()
 ax.set_xlabel('Mass (Solar Masses)')
 ax.set_ylabel('Radius (Km)') 
