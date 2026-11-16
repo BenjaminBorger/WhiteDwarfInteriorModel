@@ -10,11 +10,9 @@ import helpers.pdeSolver as pdeSolver
 from matplotlib.colors import LinearSegmentedColormap
 #from pdeSolver import gammaNonRel,gammaRel,K_nonrel,K_rel,triggerPressure
 from helpers.pdeSolver import solveWithSwitch,solveWithoutSwitch, find_eps_c,delete_last_line
-###Problem at the moment is that the radius it calculates is differnt to the radius I give it. 
 import shutil
 import pandas as pd
 import os
-from matplotlib.colors import LogNorm
 
 
 plt.rcParams["font.family"] = "serif"
@@ -122,7 +120,7 @@ fig,ax = plt.subplots()#create subplots
 
 
 #######################################No Switch################################################
-p_values = np.logspace(21,23, 60) # pascals. test values of presure
+p_values = np.logspace(17,23, 60) # pascals. test values of presure
 NRMs, NRRs = [], [] # Non Rel Masses and Non Rel Radii
 RMs,RRs = [], [] # Rel Masses and Rel Radii
 #print() # newline
@@ -135,9 +133,11 @@ for p0 in p_values: # for each P value
     RRs.append(pRR)
     RMs.append(pRM)
 def plotSimpMod():
-    ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)#plot
-    ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000)
-    
+    #ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000)#plot
+
+    ax.plot(np.array(NRMs)/M_sun.value, np.array(NRRs)/1000, lw = 3,c = "Blue")#plot
+    ax.plot(np.array(RMs)/M_sun.value, np.array(RRs)/1000, lw = 3, c = "Red")
+    #ax.ticklabel_format(style="plain", axis="x")
 #plt.xscale('log')
 #plt.yscale('log')
 #######################################No Switch End ################################################
@@ -145,7 +145,7 @@ def plotSimpMod():
 plotSimpMod() # plots simple polytopic approximations
 
 #plot vertical line at relatavistic limit 
-ax.vlines(RMs[-1]/M_sun.value, ymin=0,ymax=RRs[-1]/1000, linestyles = 'dashed', alpha = 0.2, colors = 'black')
+ax.vlines(RMs[-1]/M_sun.value, ymin=0,ymax=RRs[-1]/1000, linestyles = 'dashed', alpha = 0.8 ,lw = 1.5 , colors = 'black')
  # centre around trigger pressure
 
 
@@ -204,10 +204,20 @@ plotSwitch()
 print(f'Fully relatavistic star\'s mass: {RMs[-1]/M_sun.value} solar masses')
 ##ax.set_title('Rel Rad Mass Relation')
 
+from matplotlib.ticker import ScalarFormatter, FixedLocator, NullFormatter
 
 #plt.legend()
-ax.set_xlabel('Mass (Solar Masses)')
-ax.set_ylabel('Radius (Km)') 
-ax.set_xlim(0,1.46)
-ax.set_ylim(0,20000)
+ax.tick_params(axis='both', labelsize=16)
+ax.set_xlabel('Mass (Solar Masses)', fontsize = 16)
+ax.set_ylabel('Radius (Km)', fontsize = 16) 
+ax.set_xlim(0, 1.46)
+ax.set_ylim(0, 3e4)
+ax.xaxis.set_major_locator(FixedLocator([0.1, 0.2, 0.5, 1.0, 1.4]))
+ax.yaxis.set_major_locator(FixedLocator([1000, 2000, 5000, 10000, 20000]))
+for axis in (ax.xaxis, ax.yaxis):
+    fmt = ScalarFormatter()
+    fmt.set_scientific(False)
+    axis.set_major_formatter(fmt)
+    axis.set_minor_formatter(NullFormatter())  # hide cluttered minor labels
+
 plt.show()
