@@ -8,12 +8,16 @@ from scipy.constants import G, c, hbar, m_e, m_n
 from astropy.constants import M_sun
 import helpers.pdeSolver as pdeSolver
 from matplotlib.colors import LinearSegmentedColormap
-#from pdeSolver import gammaNonRel,gammaRel,K_nonrel,K_rel,triggerPressure
+from helpers.pdeSolver import K_nonrel,K_rel,triggerPressure
 from helpers.pdeSolver import solveWithSwitch,solveWithoutSwitch, find_eps_c,delete_last_line
 import shutil
 import pandas as pd
 import os
+#adding a bit of a accretion add part to eo
+#cooling curves 
 
+print(f'K_rel: {K_rel}, K_nonRel: {K_nonrel}')
+print(f'G: {G}, c = {c}, hbar = {hbar}, m_e = {m_e}, m_n = {m_n}')
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["font.serif"] = ["Times New Roman"]

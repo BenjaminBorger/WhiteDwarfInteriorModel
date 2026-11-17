@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
-from scipy.constants import G, c, hbar, m_e, m_n
+from scipy.constants import G, c, hbar, m_e, m_u
 from astropy.constants import M_sun
 import sys
 from helpers.starDatabase import obj
 from numba import njit
 
 
-def delete_last_line(): # got from stackoverflow https://stackoverflow.com/questions/44565704/how-to-clear-only-last-one-line-in-python-output-console
+def delete_last_line(): #got from stackoverflow https://stackoverflow.com/questions/44565704/how-to-clear-only-last-one-line-in-python-output-console
     # cursor up one line
     sys.stdout.write('\x1b[1A')
     # delete last line
@@ -19,8 +19,8 @@ def delete_last_line(): # got from stackoverflow https://stackoverflow.com/quest
 mu_e     = 2    #for carbon
 gammaRel = 4/3 
 gammaNonRel = 5/3
-K_nonrel = hbar**2/(15*np.pi**2*m_e) * ((3*np.pi**2)/(mu_e*m_n*c**2))**(5/3)
-K_rel    = hbar*c/(12*np.pi**2)      * ((3*np.pi**2)/(mu_e*m_n*c**2))**(4/3)
+K_nonrel = hbar**2/(15*np.pi**2*m_e) * (3*np.pi**2/(mu_e*m_u*c**2))**(5/3)
+K_rel    = hbar*c/(12*np.pi**2)      * (3*np.pi**2/(mu_e*m_u*c**2))**(4/3)
 #triggerPressure = ((m_e**4)*(c**5))/(12*(np.pi**2)*(hbar**3))
 
 eps_switch = np.e**((np.log(K_rel)-np.log(K_nonrel))/(gammaNonRel-gammaRel))
